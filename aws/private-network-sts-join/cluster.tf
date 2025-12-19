@@ -328,26 +328,6 @@ resource "aws_instance" "cluster" {
   volume_tags = local.tags
 }
 
-resource "aws_instance" "bastion" {
-  ami                         = data.aws_ami.this.id
-  instance_type               = "t3a.micro"
-  subnet_id                   = aws_subnet.cluster[1].id
-  key_name                    = aws_key_pair.this.key_name
-  associate_public_ip_address = true
-  vpc_security_group_ids      = [aws_security_group.cluster.id]
-  iam_instance_profile        = aws_iam_instance_profile.cluster.name
-  metadata_options {
-    instance_metadata_tags = "enabled"
-  }
-
-  root_block_device {
-    volume_size = 8
-  }
-
-  tags        = merge(local.tags, { Name : "${local.tags.Name}-bastion", role : "bastion" })
-  volume_tags = local.tags
-}
-
 resource "aws_route53_record" "cluster_ip" {
   zone_id = data.aws_route53_zone.cluster.zone_id
   name    = local.cluster_domain
@@ -358,8 +338,4 @@ resource "aws_route53_record" "cluster_ip" {
 
 output "cluster_ip" {
   value = aws_instance.cluster.public_ip
-}
-
-output "bastion_ip" {
-  value = aws_instance.bastion.public_ip
 }

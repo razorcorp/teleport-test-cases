@@ -92,6 +92,14 @@ resource "aws_subnet" "resource" {
   tags = merge(local.tags, { Name : "${local.tags.Name}-resource", role : "aws-network" })
 }
 
+resource "aws_ec2_instance_connect_endpoint" "resource" {
+  for_each  = { for i, sb in aws_subnet.resource : i => sb }
+  subnet_id = each.value.id
+  security_group_ids = [aws_security_group.resource.id]
+
+  tags = merge(local.tags, { Name : "${local.tags.Name}-resource", role : "aws-network" })
+}
+
 resource "aws_route_table_association" "resource" {
   for_each       = { for i, sb in aws_subnet.resource : i => sb }
   route_table_id = aws_vpc.resource.default_route_table_id

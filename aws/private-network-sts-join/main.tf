@@ -74,8 +74,8 @@ data "http" "teleport_version" {
 }
 
 resource "random_password" "this" {
-  length           = 8
-  special          = false
+  length  = 8
+  special = false
 
 }
 
@@ -84,7 +84,7 @@ resource "tls_private_key" "this" {
 }
 
 locals {
-  ssh_key_name = "id_${lower(tls_private_key.this.algorithm)}"
+  ssh_key_name   = "id_${lower(tls_private_key.this.algorithm)}"
   tags           = var.tags
   cluster_domain = var.teleport.cluster_domain
   teleport = {
