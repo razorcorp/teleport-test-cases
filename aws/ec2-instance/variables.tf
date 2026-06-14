@@ -11,6 +11,11 @@ variable "instance" {
   })
 }
 
+variable "user_data" {
+  description = "Cloud Init script for the VM"
+  default = ""
+}
+
 variable "tags" {
   description = "Resource tags"
   type = map(string)

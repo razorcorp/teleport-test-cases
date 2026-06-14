@@ -151,6 +151,8 @@ resource "aws_instance" "this" {
     instance_metadata_tags = "enabled"
   }
 
+  user_data_base64 = base64encode(var.user_data)
+
   root_block_device {
     volume_size = var.instance.size
   }
