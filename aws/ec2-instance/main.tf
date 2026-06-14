@@ -15,6 +15,13 @@ terraform {
   }
 }
 
+provider "aws" {
+  # Configuration options
+  default_tags {
+    tags = var.tags
+  }
+}
+
 data "aws_availability_zones" "this" {
   state = "available"
 }
@@ -32,7 +39,6 @@ resource "aws_key_pair" "this" {
   key_name   = "${var.tags.Name}-key"
   public_key = tls_private_key.this.public_key_openssh
 
-  tags = var.tags
 }
 
 resource "aws_vpc" "this" {
@@ -40,7 +46,6 @@ resource "aws_vpc" "this" {
   enable_dns_hostnames = true
   enable_dns_support   = true
 
-  tags = var.tags
 }
 
 resource "aws_subnet" "this" {
@@ -49,7 +54,6 @@ resource "aws_subnet" "this" {
   cidr_block        = cidrsubnet(var.cidr, 3, each.key)
   availability_zone = each.value
 
-  tags = var.tags
 }
 
 resource "aws_route_table_association" "this" {
@@ -60,7 +64,6 @@ resource "aws_route_table_association" "this" {
 
 resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
-  tags   = var.tags
 }
 
 resource "aws_route" "this" {
@@ -70,8 +73,8 @@ resource "aws_route" "this" {
 }
 
 resource "aws_security_group" "this" {
-  name        = "${var.tags.Name}-sg"
-  vpc_id      = aws_vpc.this.id
+  name   = "${var.tags.Name}-sg"
+  vpc_id = aws_vpc.this.id
 
   egress {
     cidr_blocks = ["0.0.0.0/0"]
@@ -87,7 +90,6 @@ resource "aws_security_group" "this" {
     to_port     = 22
   }
 
-  tags = var.tags
 }
 
 data "aws_iam_policy_document" "this" {
@@ -124,19 +126,16 @@ data "aws_iam_policy_document" "assume_role" {
 resource "aws_iam_policy" "this" {
   name   = "${var.tags.Name}-policy"
   policy = data.aws_iam_policy_document.this.json
-  tags   = var.tags
 }
 
 resource "aws_iam_role" "this" {
   name               = "${var.tags.Name}-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
-  tags               = var.tags
 }
 
 resource "aws_iam_instance_profile" "this" {
   name = "${var.tags.Name}-profile"
   role = aws_iam_role.this.name
-  tags = var.tags
 }
 
 resource "aws_instance" "this" {
@@ -156,8 +155,13 @@ resource "aws_instance" "this" {
   root_block_device {
     volume_size = var.instance.size
   }
-  tags        = var.tags
-  volume_tags = var.tags
+  tags = {
+    CreatedAt = timestamp()
+  }
+
+  lifecycle {
+    ignore_changes = [tags["CreatedAt"]]
+  }
 }
 
 output "ip" {
